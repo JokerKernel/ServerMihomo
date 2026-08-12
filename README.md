@@ -109,7 +109,7 @@ MIHOMO_RELEASE_CHANNEL=alpha
   1 安装与更新 — 安装 mihomo 内核与 systemd 服务
   2 订阅管理 — 下载、修改并应用 Clash 订阅
   3 mihomo 服务与代理 — 控制服务并管理代理环境
-  4 卸载 — 停止服务并移除 mihomo 运行文件
+  4 完整卸载 mihomo — 停止服务并移除 mihomo 运行文件
   0/q 退出
 
 ❯ 输入选项 [0-4]:
@@ -187,6 +187,20 @@ sudo ./snailproxy
 
 ```bash
 ./snailproxy --version
+```
+
+只卸载 ServerMihomo 管理程序本身，并保留 mihomo 内核、systemd 服务、订阅和全部配置：
+
+```bash
+sudo mihomo uninstall
+```
+
+主程序会从仓库 `main` 分支安全下载安装脚本，并调用脚本的 `uninstall` 操作。脚本会显示管理程序安装路径并在删除前要求确认；完整卸载 mihomo 服务及数据仍需从主菜单选择“完整卸载 mihomo”。
+
+也可以直接调用安装脚本：
+
+```bash
+sudo sh scripts/install.sh uninstall
 ```
 
 ---

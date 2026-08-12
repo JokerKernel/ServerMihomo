@@ -10,11 +10,14 @@ import (
 	"snailproxy/internal/domain/mihomo"
 	"snailproxy/internal/feature"
 	"snailproxy/internal/infra/platform"
+	"snailproxy/internal/selfmanage"
 	"snailproxy/internal/terminal"
 	"snailproxy/internal/version"
 )
 
 type appRuntime struct{}
+
+var uninstallSelfFunc = selfmanage.Uninstall
 
 func (appRuntime) Terminal() terminal.Terminal {
 	return terminal.Default()
@@ -37,6 +40,9 @@ func Run(ctx context.Context, args []string, registry feature.Registry) error {
 	if handleVersionArg(args) {
 		fmt.Println(version.Info())
 		return nil
+	}
+	if handleSelfUninstallArg(args) {
+		return uninstallSelfFunc(ctx)
 	}
 
 	if err := platform.RequireSudo(); err != nil {
@@ -116,6 +122,19 @@ func handleVersionArg(args []string) bool {
 
 	switch strings.TrimSpace(args[0]) {
 	case "-v", "--version", "version":
+		return true
+	default:
+		return false
+	}
+}
+
+func handleSelfUninstallArg(args []string) bool {
+	if len(args) != 1 {
+		return false
+	}
+
+	switch strings.ToLower(strings.TrimSpace(args[0])) {
+	case "uninstall", "--uninstall":
 		return true
 	default:
 		return false

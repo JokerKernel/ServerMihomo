@@ -14,7 +14,7 @@ func (Feature) ID() string {
 }
 
 func (Feature) Label() string {
-	return "卸载"
+	return "完整卸载 mihomo"
 }
 
 func (Feature) Description() string {

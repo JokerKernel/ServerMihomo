@@ -23,6 +23,36 @@ func TestRunVersionArgReturnsBeforeSudoOrMenu(t *testing.T) {
 	}
 }
 
+func TestHandleSelfUninstallArg(t *testing.T) {
+	for _, arg := range []string{"uninstall", "--uninstall", " UNINSTALL "} {
+		if !handleSelfUninstallArg([]string{arg}) {
+			t.Errorf("handleSelfUninstallArg(%q) = false", arg)
+		}
+	}
+	for _, args := range [][]string{nil, {"remove"}, {"uninstall", "extra"}} {
+		if handleSelfUninstallArg(args) {
+			t.Errorf("handleSelfUninstallArg(%q) = true", args)
+		}
+	}
+}
+
+func TestRunSelfUninstallDelegatesToRepositoryScript(t *testing.T) {
+	original := uninstallSelfFunc
+	t.Cleanup(func() { uninstallSelfFunc = original })
+
+	called := false
+	uninstallSelfFunc = func(context.Context) error {
+		called = true
+		return nil
+	}
+	if err := Run(context.Background(), []string{"uninstall"}, feature.Registry{}); err != nil {
+		t.Fatalf("Run(uninstall) error = %v", err)
+	}
+	if !called {
+		t.Fatal("repository install script was not delegated to")
+	}
+}
+
 func TestSelectMainMenuUsesDefaultRegistryOrder(t *testing.T) {
 	tests := []struct {
 		input  string

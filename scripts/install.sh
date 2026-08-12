@@ -6,6 +6,7 @@ REPOSITORY="Snail-one/ServerMihomo"
 INSTALL_DIR="${SERVERMIHOMO_INSTALL_DIR:-/usr/local/sbin}"
 BINARY_NAME="${SERVERMIHOMO_BINARY_NAME:-mihomo}"
 RELEASE="${SERVERMIHOMO_VERSION:-latest}"
+MODE="install"
 TEMP_DIR=""
 STAGED_FILE=""
 
@@ -24,9 +25,10 @@ fail() {
 
 usage() {
 	cat <<'EOF'
-用法：sudo sh scripts/install.sh [版本]
+用法：sudo sh scripts/install.sh [版本|uninstall]
 
 不指定版本时安装或更新到最新版本；也可以指定发布标签，例如 v0.0.7。
+使用 uninstall 只删除 ServerMihomo 管理程序本身，保留 mihomo 服务及数据。
 
 可选环境变量：
   SERVERMIHOMO_VERSION       要安装的发布标签，默认为 latest
@@ -52,6 +54,7 @@ case "${1:-}" in
 		usage
 		exit 0
 		;;
+	uninstall|--uninstall) MODE="uninstall" ;;
 	"") ;;
 	*) RELEASE="$1" ;;
 esac
@@ -67,8 +70,34 @@ case "$INSTALL_DIR" in
 	*) fail "安装目录必须是绝对路径：$INSTALL_DIR" ;;
 esac
 
-[ "$(id -u)" -eq 0 ] || fail "安装需要 root 权限，请使用 sudo sh scripts/install.sh，或通过 curl ... | sudo sh 运行"
+if [ "$(id -u)" -ne 0 ]; then
+	if [ "$MODE" = "uninstall" ]; then
+		fail "卸载管理程序需要 root 权限，请使用 sudo mihomo uninstall"
+	fi
+	fail "安装需要 root 权限，请使用 sudo sh scripts/install.sh，或通过 curl ... | sudo sh 运行"
+fi
 [ "$(uname -s)" = "Linux" ] || fail "目前仅支持 Linux"
+
+TARGET="${INSTALL_DIR}/${BINARY_NAME}"
+if [ "$MODE" = "uninstall" ]; then
+	if [ ! -e "$TARGET" ] && [ ! -L "$TARGET" ]; then
+		info "管理程序未安装，无需卸载：${TARGET}"
+		exit 0
+	fi
+	warn "此操作只删除 ServerMihomo 管理程序本身"
+	info "程序文件：${TARGET}"
+	info "将保留 mihomo 内核、systemd 服务、订阅、配置和代理环境"
+	printf '确认删除管理程序? [y/N]: '
+	IFS= read -r CONFIRM || CONFIRM=""
+	case "$CONFIRM" in
+		y|Y|yes|YES|Yes) ;;
+		*) info "已取消卸载管理程序"; exit 0 ;;
+	esac
+	rm -f "$TARGET"
+	info "管理程序已卸载：${TARGET}"
+	info "mihomo 服务及其数据均已保留"
+	exit 0
+fi
 
 for REQUIRED_COMMAND in awk chmod install mktemp mv sed uname; do
 	command -v "$REQUIRED_COMMAND" >/dev/null 2>&1 || fail "缺少必要命令：$REQUIRED_COMMAND"
@@ -129,7 +158,6 @@ CHECKSUM_NAME="checksums_${RELEASE_VERSION}.txt"
 DOWNLOAD_BASE="https://github.com/${REPOSITORY}/releases/download/${RELEASE_VERSION}"
 ASSET_FILE="${TEMP_DIR}/${ASSET}"
 CHECKSUM_FILE="${TEMP_DIR}/${CHECKSUM_NAME}"
-TARGET="${INSTALL_DIR}/${BINARY_NAME}"
 
 # 先下载小体积校验文件，用于验证现有程序和待安装程序。
 download "${DOWNLOAD_BASE}/${CHECKSUM_NAME}" "$CHECKSUM_FILE"
