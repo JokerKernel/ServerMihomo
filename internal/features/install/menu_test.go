@@ -33,6 +33,22 @@ func TestSelectMapping(t *testing.T) {
 	}
 }
 
+func TestFormatAssetSize(t *testing.T) {
+	tests := []struct {
+		size int64
+		want string
+	}{
+		{size: 512, want: "512 B"},
+		{size: 1024, want: "1.0 KiB"},
+		{size: 5 * 1024 * 1024, want: "5.0 MiB"},
+	}
+	for _, tt := range tests {
+		if got := formatAssetSize(tt.size); got != tt.want {
+			t.Errorf("formatAssetSize(%d) = %q, want %q", tt.size, got, tt.want)
+		}
+	}
+}
+
 func withInput(t *testing.T, input string) {
 	t.Helper()
 	restore := terminal.SetInput(strings.NewReader(input))

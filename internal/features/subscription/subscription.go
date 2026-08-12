@@ -22,6 +22,10 @@ func (Feature) Label() string {
 	return "订阅管理"
 }
 
+func (Feature) Description() string {
+	return "下载、修改并应用 Clash 订阅"
+}
+
 func (Feature) Order() int {
 	return 20
 }
@@ -39,7 +43,7 @@ func (Feature) Run(ctx context.Context, runtime feature.Runtime) error {
 		}
 
 		if action == ActionReturn {
-			fmt.Println("已返回。")
+			terminal.Info("已返回主菜单。")
 			return feature.ErrReturn
 		}
 
@@ -88,9 +92,9 @@ func runSubscriptionAction(ctx context.Context, runtime feature.Runtime, store m
 
 func pauseAfterSubscriptionAction(actionErr error) error {
 	if actionErr != nil {
-		fmt.Printf("错误: %v\n", actionErr)
+		terminal.Error(actionErr.Error())
 	} else {
-		fmt.Println("操作完成。")
+		terminal.Success("操作完成。")
 	}
 
 	fmt.Println()

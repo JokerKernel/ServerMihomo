@@ -54,6 +54,10 @@ func (Feature) Label() string {
 	return "安装与更新"
 }
 
+func (Feature) Description() string {
+	return "安装 mihomo 内核与 systemd 服务"
+}
+
 func (Feature) Order() int {
 	return 10
 }
@@ -66,7 +70,7 @@ func (Feature) Run(ctx context.Context, runtime feature.Runtime) error {
 		}
 
 		if action == ActionReturn {
-			fmt.Println("已返回。")
+			terminal.Info("已返回主菜单。")
 			return feature.ErrReturn
 		}
 
@@ -91,9 +95,9 @@ func runInstallAction(ctx context.Context, runtime feature.Runtime, action Actio
 
 func pauseAfterInstallAction(actionErr error) error {
 	if actionErr != nil {
-		fmt.Printf("错误: %v\n", actionErr)
+		terminal.Error(actionErr.Error())
 	} else {
-		fmt.Println("操作完成。")
+		terminal.Success("操作完成。")
 	}
 
 	fmt.Println()

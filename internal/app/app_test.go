@@ -82,8 +82,13 @@ func TestSelectMainMenuIsGeneratedFromRegistry(t *testing.T) {
 	if strings.Contains(output, "订阅管理") {
 		t.Fatalf("output contains unregistered feature:\n%s", output)
 	}
-	if !strings.Contains(output, "请输入操作编号 [0-2]:") {
+	if !strings.Contains(output, "输入选项 [0-2]:") {
 		t.Fatalf("output prompt range should follow registry size:\n%s", output)
+	}
+	for _, want := range []string{"ServerMihomo", "[版本 dev]", "[linux/"} {
+		if !strings.Contains(output, want) {
+			t.Fatalf("output missing home detail %q:\n%s", want, output)
+		}
 	}
 }
 

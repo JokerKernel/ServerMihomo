@@ -2,8 +2,6 @@ package install
 
 import (
 	"fmt"
-	"strconv"
-	"strings"
 
 	"snailproxy/internal/infra/github"
 	"snailproxy/internal/terminal"
@@ -19,35 +17,38 @@ const (
 )
 
 func Select() (Action, error) {
-	return terminal.Select("安装与更新:", "[0-3]", []terminal.MenuOption[Action]{
-		{Number: 1, Label: "本地安装", Value: ActionLocal},
-		{Number: 2, Label: "在线下载并安装 mihomo", Value: ActionOnline},
-		{Number: 3, Label: "安装/更新 systemd 服务", Value: ActionService},
+	return terminal.Select("安装与更新", "[0-3]", []terminal.MenuOption[Action]{
+		{Number: 1, Label: "本地安装", Description: "使用程序内嵌资源，无需联网", Value: ActionLocal},
+		{Number: 2, Label: "在线安装 mihomo", Description: "从 GitHub 获取当前架构版本", Value: ActionOnline},
+		{Number: 3, Label: "安装/更新 systemd 服务", Description: "写入服务配置，默认不启动", Value: ActionService},
 		{Number: 0, Label: "返回", Value: ActionReturn},
 	})
 }
 
 func SelectAsset(assets []github.Asset) (github.Asset, error) {
-	fmt.Println("可下载的 mihomo 版本包:")
+	options := make([]terminal.MenuOption[github.Asset], 0, len(assets))
 	for i, asset := range assets {
-		fmt.Printf("%3d. %-70s %12d bytes\n", i+1, asset.Name, asset.Size)
+		options = append(options, terminal.MenuOption[github.Asset]{
+			Number:      i + 1,
+			Label:       asset.Name,
+			Description: formatAssetSize(asset.Size),
+			Value:       asset,
+		})
 	}
+	return terminal.Select("安装与更新 › 选择安装包", fmt.Sprintf("[1-%d]", len(assets)), options)
+}
 
-	for {
-		fmt.Printf("请选择要下载的包编号 [1-%d]: ", len(assets))
-		line, err := terminal.ReadLine()
-		if err != nil {
-			return github.Asset{}, fmt.Errorf("读取用户输入失败: %w", err)
-		}
-
-		index, err := strconv.Atoi(strings.TrimSpace(line))
-		if err != nil || index < 1 || index > len(assets) {
-			fmt.Println("输入无效，请重新输入。")
-			continue
-		}
-
-		return assets[index-1], nil
+func formatAssetSize(size int64) string {
+	const unit = 1024
+	if size < unit {
+		return fmt.Sprintf("%d B", size)
 	}
+	div, exp := int64(unit), 0
+	for value := size / unit; value >= unit; value /= unit {
+		div *= unit
+		exp++
+	}
+	return fmt.Sprintf("%.1f %ciB", float64(size)/float64(div), "KMGTPE"[exp])
 }
 
 func ConfirmOverwrite(path string) (bool, error) {

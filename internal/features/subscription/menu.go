@@ -20,15 +20,15 @@ const (
 
 func Select(labels []string) (Action, error) {
 	options := []terminal.MenuOption[Action]{
-		{Number: 1, Label: "新增", Value: ActionCreate},
+		{Number: 1, Label: "新增订阅", Description: "下载并保存新的 Clash 订阅", Value: ActionCreate},
 	}
 	promptRange := "[0-1]"
 	if len(labels) > 0 {
 		options = append(options,
-			terminal.MenuOption[Action]{Number: 2, Label: "更新已有", Value: ActionUpdate},
-			terminal.MenuOption[Action]{Number: 3, Label: "修改已有", Value: ActionModify},
-			terminal.MenuOption[Action]{Number: 4, Label: "删除已有", Value: ActionDelete},
-			terminal.MenuOption[Action]{Number: 5, Label: "应用订阅", Value: ActionApply},
+			terminal.MenuOption[Action]{Number: 2, Label: "更新订阅", Description: "重新下载已有订阅", Value: ActionUpdate},
+			terminal.MenuOption[Action]{Number: 3, Label: "修改订阅", Description: "修改名称或下载链接", Value: ActionModify},
+			terminal.MenuOption[Action]{Number: 4, Label: "删除订阅", Description: "删除元数据和本地文件", Value: ActionDelete},
+			terminal.MenuOption[Action]{Number: 5, Label: "应用订阅", Description: "设为 mihomo 当前配置并重启", Value: ActionApply},
 		)
 		promptRange = "[0-5]"
 	}
@@ -47,7 +47,7 @@ func SelectSubscription(labels []string) (int, error) {
 		})
 	}
 	options = append(options, terminal.MenuOption[int]{Number: 0, Label: "返回", Value: -1})
-	return terminal.Select("可用订阅:", fmt.Sprintf("[0-%d]", len(labels)), options)
+	return terminal.Select("订阅管理 › 选择订阅", fmt.Sprintf("[0-%d]", len(labels)), options)
 }
 
 func PromptSubscriptionURL() (string, error) {
@@ -56,21 +56,20 @@ func PromptSubscriptionURL() (string, error) {
 
 func PromptSubscriptionURLDefault(defaultURL string) (string, error) {
 	for {
-		if strings.TrimSpace(defaultURL) == "" {
-			fmt.Print("请输入 Clash 订阅链接: ")
-		} else {
-			fmt.Printf("请输入 Clash 订阅链接 [%s]: ", defaultURL)
+		prompt := "请输入 Clash 订阅链接: "
+		if strings.TrimSpace(defaultURL) != "" {
+			prompt = fmt.Sprintf("请输入 Clash 订阅链接 [%s]: ", defaultURL)
 		}
-		line, err := terminal.ReadLine()
+		value, err := terminal.Ask(prompt)
 		if err != nil {
 			return "", fmt.Errorf("读取用户输入失败: %w", err)
 		}
-		value := strings.TrimSpace(line)
+		value = strings.TrimSpace(value)
 		if value == "" {
 			value = strings.TrimSpace(defaultURL)
 		}
 		if value == "" {
-			fmt.Println("订阅链接不能为空。")
+			terminal.Warning("订阅链接不能为空。")
 			continue
 		}
 		return value, nil
@@ -79,22 +78,21 @@ func PromptSubscriptionURLDefault(defaultURL string) (string, error) {
 
 func PromptSubscriptionName(defaultName string) (string, error) {
 	for {
-		if strings.TrimSpace(defaultName) == "" {
-			fmt.Print("请输入保存的订阅名称: ")
-		} else {
-			fmt.Printf("请输入保存的订阅名称 [%s]: ", defaultName)
+		prompt := "请输入保存的订阅名称: "
+		if strings.TrimSpace(defaultName) != "" {
+			prompt = fmt.Sprintf("请输入保存的订阅名称 [%s]: ", defaultName)
 		}
 
-		line, err := terminal.ReadLine()
+		value, err := terminal.Ask(prompt)
 		if err != nil {
 			return "", fmt.Errorf("读取用户输入失败: %w", err)
 		}
-		value := strings.TrimSpace(line)
+		value = strings.TrimSpace(value)
 		if value == "" {
 			value = strings.TrimSpace(defaultName)
 		}
 		if value == "" {
-			fmt.Println("订阅名称不能为空。")
+			terminal.Warning("订阅名称不能为空。")
 			continue
 		}
 		return value, nil

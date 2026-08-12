@@ -39,8 +39,6 @@ func Run(ctx context.Context, args []string, registry feature.Registry) error {
 		return nil
 	}
 
-	fmt.Printf("当前 Linux 系统: linux/%s\n", runtime.GOARCH)
-
 	if err := platform.RequireSudo(); err != nil {
 		return err
 	}
@@ -52,7 +50,7 @@ func Run(ctx context.Context, args []string, registry feature.Registry) error {
 			return err
 		}
 		if action.exit {
-			fmt.Println("已退出。")
+			terminal.Info("已退出。")
 			return nil
 		}
 
@@ -67,9 +65,9 @@ func runSelectedFeature(ctx context.Context, runtimeEnv feature.Runtime, selecte
 		if errors.Is(err, feature.ErrReturn) {
 			return nil
 		}
-		fmt.Printf("错误: %v\n", err)
+		terminal.Error(err.Error())
 	} else {
-		fmt.Println("操作完成。")
+		terminal.Success("操作完成。")
 	}
 
 	fmt.Println()
@@ -84,10 +82,15 @@ func selectMainMenu(registry feature.Registry) (mainMenuAction, error) {
 	features := registry.Features()
 	options := make([]terminal.MenuOption[mainMenuAction], 0, len(features)+1)
 	for i, feature := range features {
+		description := ""
+		if described, ok := feature.(interface{ Description() string }); ok {
+			description = described.Description()
+		}
 		options = append(options, terminal.MenuOption[mainMenuAction]{
-			Number: i + 1,
-			Label:  feature.Label(),
-			Value:  mainMenuAction{feature: feature},
+			Number:      i + 1,
+			Label:       feature.Label(),
+			Description: description,
+			Value:       mainMenuAction{feature: feature},
 		})
 	}
 	options = append(options, terminal.MenuOption[mainMenuAction]{
@@ -96,7 +99,7 @@ func selectMainMenu(registry feature.Registry) (mainMenuAction, error) {
 		Value:  mainMenuAction{exit: true},
 	})
 
-	return terminal.Select("主菜单:", mainMenuPromptRange(len(features)), options)
+	return terminal.SelectHome(version.Version, "linux/"+runtime.GOARCH, mainMenuPromptRange(len(features)), options)
 }
 
 func mainMenuPromptRange(featureCount int) string {

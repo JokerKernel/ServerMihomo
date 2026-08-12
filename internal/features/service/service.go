@@ -19,6 +19,10 @@ func (Feature) Label() string {
 	return "mihomo 服务与代理"
 }
 
+func (Feature) Description() string {
+	return "控制服务并管理代理环境"
+}
+
 func (Feature) Order() int {
 	return 30
 }
@@ -35,7 +39,7 @@ func (Feature) Run(ctx context.Context, runtime feature.Runtime) error {
 			return err
 		}
 		if action == ActionReturn {
-			fmt.Println("已返回。")
+			terminal.Info("已返回主菜单。")
 			return feature.ErrReturn
 		}
 
@@ -64,9 +68,9 @@ func runServiceAction(ctx context.Context, manager platform.Manager, action Acti
 
 func pauseAfterServiceAction(actionErr error) error {
 	if actionErr != nil {
-		fmt.Printf("错误: %v\n", actionErr)
+		terminal.Error(actionErr.Error())
 	} else {
-		fmt.Println("操作完成。")
+		terminal.Success("操作完成。")
 	}
 
 	fmt.Println()
