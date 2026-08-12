@@ -22,17 +22,30 @@ fi
 if [ "$COLOR_ENABLED" -eq 1 ]; then
 	COLOR_RESET='\033[0m'
 	COLOR_CYAN='\033[36m'
+	COLOR_BOLD_CYAN='\033[1;36m'
+	COLOR_GREEN='\033[32m'
 	COLOR_YELLOW='\033[33m'
 	COLOR_RED='\033[31m'
 else
 	COLOR_RESET=''
 	COLOR_CYAN=''
+	COLOR_BOLD_CYAN=''
+	COLOR_GREEN=''
 	COLOR_YELLOW=''
 	COLOR_RED=''
 fi
 
+ui_title() {
+	printf '%b%s%b %b%s%b\n' "$COLOR_CYAN" '╭─' "$COLOR_RESET" "$COLOR_BOLD_CYAN" "ServerMihomo  ›  $1" "$COLOR_RESET"
+	printf '%b%s%b\n\n' "$COLOR_CYAN" '╰────────────────────────────────────────────────────' "$COLOR_RESET"
+}
+
 info() {
 	printf '%b%s%b %s\n' "$COLOR_CYAN" '[INFO]' "$COLOR_RESET" "$*"
+}
+
+success() {
+	printf '%b%s%b %s\n' "$COLOR_GREEN" '[ OK ]' "$COLOR_RESET" "$*"
 }
 
 warn() {
@@ -91,6 +104,15 @@ case "$INSTALL_DIR" in
 	*) fail "安装目录必须是绝对路径：$INSTALL_DIR" ;;
 esac
 
+TARGET="${INSTALL_DIR}/${BINARY_NAME}"
+if [ "$MODE" = "uninstall" ]; then
+	ui_title "卸载管理程序"
+elif [ -e "$TARGET" ] || [ -L "$TARGET" ]; then
+	ui_title "管理程序更新"
+else
+	ui_title "管理程序安装"
+fi
+
 if [ "$(id -u)" -ne 0 ]; then
 	if [ "$MODE" = "uninstall" ]; then
 		fail "卸载管理程序需要 root 权限，请使用 sudo mihomo uninstall"
@@ -99,7 +121,6 @@ if [ "$(id -u)" -ne 0 ]; then
 fi
 [ "$(uname -s)" = "Linux" ] || fail "目前仅支持 Linux"
 
-TARGET="${INSTALL_DIR}/${BINARY_NAME}"
 if [ "$MODE" = "uninstall" ]; then
 	if [ ! -e "$TARGET" ] && [ ! -L "$TARGET" ]; then
 		info "管理程序未安装，无需卸载：${TARGET}"
@@ -115,7 +136,7 @@ if [ "$MODE" = "uninstall" ]; then
 		*) info "已取消卸载管理程序"; exit 0 ;;
 	esac
 	rm -f "$TARGET"
-	info "管理程序已卸载：${TARGET}"
+	success "管理程序已卸载：${TARGET}"
 	info "mihomo 服务及其数据均已保留"
 	exit 0
 fi
@@ -264,7 +285,7 @@ if [ -e "$TARGET" ]; then
 	if [ "$CURRENT_RELEASE" = "$RELEASE_VERSION" ]; then
 		CURRENT_SHA256="$(file_sha256 "$TARGET")"
 		if [ "$CURRENT_SHA256" = "$EXPECTED_SHA256" ]; then
-			info "当前已是最新版本，文件校验通过，无需更新"
+			success "当前已是最新版本，文件校验通过，无需更新"
 			exit 0
 		fi
 		warn "当前版本号相同，但文件校验失败，将重新下载修复"
@@ -279,7 +300,7 @@ download_asset "${DOWNLOAD_BASE}/${ASSET}" "$ASSET_FILE"
 
 ACTUAL_SHA256="$(file_sha256 "$ASSET_FILE")"
 [ "$ACTUAL_SHA256" = "$EXPECTED_SHA256" ] || fail "安装包 SHA-256 校验失败"
-info "SHA-256 校验通过"
+success "SHA-256 校验通过"
 
 chmod 0755 "$ASSET_FILE"
 DOWNLOADED_VERSION="$("$ASSET_FILE" --version 2>/dev/null | sed -n '1p' || true)"
@@ -292,6 +313,6 @@ install -m 0755 "$ASSET_FILE" "$STAGED_FILE"
 mv -f "$STAGED_FILE" "$TARGET"
 STAGED_FILE=""
 
-info "${ACTION}完成：${TARGET}"
+success "${ACTION}完成：${TARGET}"
 info "当前版本：${DOWNLOADED_VERSION}"
 info "运行命令：sudo ${BINARY_NAME}"

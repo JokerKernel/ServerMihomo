@@ -9,8 +9,6 @@ import (
 	"os"
 	"os/exec"
 	"time"
-
-	"snailproxy/internal/terminal"
 )
 
 const (
@@ -21,17 +19,8 @@ const (
 // Update downloads the repository installer and delegates updating to it.
 func Update(ctx context.Context) error {
 	client := &http.Client{Timeout: 30 * time.Second}
-	terminal.MenuTitle("管理程序更新")
-	terminal.Info("安装脚本来源: " + InstallScriptURL)
-	terminal.Info("正在下载安装脚本并检查最新版本...")
-
-	if err := run(ctx, client, InstallScriptURL, os.Stdin, os.Stdout, os.Stderr); err != nil {
-		terminal.Error("管理程序更新失败。")
-		return err
-	}
-
-	terminal.Success("管理程序更新检查完成。")
-	return nil
+	fmt.Printf("安装脚本来源: %s\n", InstallScriptURL)
+	return run(ctx, client, InstallScriptURL, os.Stdin, os.Stdout, os.Stderr)
 }
 
 // Uninstall downloads the repository installer and delegates self-removal to it.
