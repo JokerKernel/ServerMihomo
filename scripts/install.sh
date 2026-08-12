@@ -169,6 +169,36 @@ else
 	fail "需要 sha256sum 或 shasum 才能校验安装包"
 fi
 
+version_is_older() {
+	awk -v candidate="$1" -v current="$2" '
+		function normalize(version) {
+			sub(/^[vV]/, "", version)
+			sub(/[-+].*$/, "", version)
+			return version
+		}
+		BEGIN {
+			candidate = normalize(candidate)
+			current = normalize(current)
+			candidate_parts = split(candidate, candidate_values, ".")
+			current_parts = split(current, current_values, ".")
+			parts = candidate_parts > current_parts ? candidate_parts : current_parts
+			for (part = 1; part <= parts; part++) {
+				candidate_value = candidate_values[part] == "" ? 0 : candidate_values[part]
+				current_value = current_values[part] == "" ? 0 : current_values[part]
+				if (candidate_value !~ /^[0-9]+$/ || current_value !~ /^[0-9]+$/) {
+					exit 1
+				}
+				if ((candidate_value + 0) < (current_value + 0)) {
+					exit 0
+				}
+				if ((candidate_value + 0) > (current_value + 0)) {
+					exit 1
+				}
+			}
+			exit 1
+	}'
+}
+
 TEMP_DIR="$(mktemp -d "${TMPDIR:-/tmp}/servermihomo-install.XXXXXX")"
 if [ "$RELEASE" = "latest" ]; then
 	RELEASE_METADATA="${TEMP_DIR}/release.json"
@@ -189,19 +219,27 @@ DOWNLOAD_BASE="https://github.com/${REPOSITORY}/releases/download/${RELEASE_VERS
 ASSET_FILE="${TEMP_DIR}/${ASSET}"
 CHECKSUM_FILE="${TEMP_DIR}/${CHECKSUM_NAME}"
 
+CURRENT_VERSION=""
+CURRENT_RELEASE=""
+if [ -x "$TARGET" ]; then
+	CURRENT_VERSION="$("$TARGET" --version 2>/dev/null | sed -n '1p' || true)"
+	CURRENT_RELEASE="$(printf '%s\n' "$CURRENT_VERSION" | awk '$1 == "snailproxy" { print $2; exit }')"
+fi
+if [ -e "$TARGET" ]; then
+	info "当前版本：${CURRENT_VERSION:-未知}"
+fi
+if [ "$RELEASE" = "latest" ] && [ -n "$CURRENT_RELEASE" ] && version_is_older "$RELEASE_VERSION" "$CURRENT_RELEASE"; then
+	warn "远端 latest (${RELEASE_VERSION}) 低于当前版本 (${CURRENT_RELEASE})，已阻止自动降级"
+	info "如需明确降级，请指定版本运行：sudo sh scripts/install.sh ${RELEASE_VERSION}"
+	exit 0
+fi
+
 # 先下载小体积校验文件，用于验证现有程序和待安装程序。
 download "${DOWNLOAD_BASE}/${CHECKSUM_NAME}" "$CHECKSUM_FILE"
 EXPECTED_SHA256="$(awk -v asset="$ASSET" '$2 == asset || $2 == "*" asset { print $1; exit }' "$CHECKSUM_FILE")"
 [ -n "$EXPECTED_SHA256" ] || fail "${CHECKSUM_NAME} 中没有 ${ASSET} 的校验值"
 
 if [ -e "$TARGET" ]; then
-	CURRENT_VERSION=""
-	CURRENT_RELEASE=""
-	if [ -x "$TARGET" ]; then
-		CURRENT_VERSION="$("$TARGET" --version 2>/dev/null | sed -n '1p' || true)"
-		CURRENT_RELEASE="$(printf '%s\n' "$CURRENT_VERSION" | awk '$1 == "snailproxy" { print $2; exit }')"
-	fi
-	info "当前版本：${CURRENT_VERSION:-未知}"
 	if [ "$CURRENT_RELEASE" = "$RELEASE_VERSION" ]; then
 		CURRENT_SHA256="$(file_sha256 "$TARGET")"
 		if [ "$CURRENT_SHA256" = "$EXPECTED_SHA256" ]; then

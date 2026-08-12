@@ -47,6 +47,8 @@ sudo mihomo
 
 查询最新 Release 时，如果检测到代理环境变量，会先使用当前代理配置访问 GitHub API；代理请求失败或被限流时，脚本会自动绕过代理并尝试直连 API。
 
+默认更新不会把已安装程序自动降级：如果 GitHub `latest` 的语义版本低于本地版本，脚本会保留本地程序并给出警告。只有明确指定旧标签（例如 `sudo sh scripts/install.sh v0.0.1`）时才允许降级。
+
 ---
 
 # 本地安装包（Local Install Bundle）
