@@ -16,14 +16,21 @@ const (
 	maxScriptSize    = 1024 * 1024
 )
 
-// Uninstall downloads the repository installer and delegates self-removal to it.
-func Uninstall(ctx context.Context) error {
+// Update downloads the repository installer and delegates updating to it.
+func Update(ctx context.Context) error {
 	client := &http.Client{Timeout: 30 * time.Second}
 	fmt.Printf("安装脚本来源: %s\n", InstallScriptURL)
 	return run(ctx, client, InstallScriptURL, os.Stdin, os.Stdout, os.Stderr)
 }
 
-func run(ctx context.Context, client *http.Client, scriptURL string, stdin io.Reader, stdout, stderr io.Writer) error {
+// Uninstall downloads the repository installer and delegates self-removal to it.
+func Uninstall(ctx context.Context) error {
+	client := &http.Client{Timeout: 30 * time.Second}
+	fmt.Printf("安装脚本来源: %s\n", InstallScriptURL)
+	return run(ctx, client, InstallScriptURL, os.Stdin, os.Stdout, os.Stderr, "uninstall")
+}
+
+func run(ctx context.Context, client *http.Client, scriptURL string, stdin io.Reader, stdout, stderr io.Writer, scriptArgs ...string) error {
 	request, err := http.NewRequestWithContext(ctx, http.MethodGet, scriptURL, nil)
 	if err != nil {
 		return fmt.Errorf("创建安装脚本请求失败: %w", err)
@@ -48,7 +55,7 @@ func run(ctx context.Context, client *http.Client, scriptURL string, stdin io.Re
 		return fmt.Errorf("下载内容不是有效的 ServerMihomo 安装脚本")
 	}
 
-	temporary, err := os.CreateTemp("", "servermihomo-uninstall-*.sh")
+	temporary, err := os.CreateTemp("", "servermihomo-installer-*.sh")
 	if err != nil {
 		return fmt.Errorf("创建安装脚本临时文件失败: %w", err)
 	}
@@ -66,12 +73,13 @@ func run(ctx context.Context, client *http.Client, scriptURL string, stdin io.Re
 		return fmt.Errorf("保存安装脚本失败: %w", err)
 	}
 
-	command := exec.CommandContext(ctx, "sh", path, "uninstall")
+	commandArgs := append([]string{path}, scriptArgs...)
+	command := exec.CommandContext(ctx, "sh", commandArgs...)
 	command.Stdin = stdin
 	command.Stdout = stdout
 	command.Stderr = stderr
 	if err := command.Run(); err != nil {
-		return fmt.Errorf("安装脚本执行卸载失败: %w", err)
+		return fmt.Errorf("执行安装脚本失败: %w", err)
 	}
 	return nil
 }

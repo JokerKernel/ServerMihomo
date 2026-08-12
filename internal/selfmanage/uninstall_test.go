@@ -13,10 +13,22 @@ func TestRunDownloadsScriptAndPassesUninstallArgument(t *testing.T) {
 	client := testClient(http.StatusOK, "#!/bin/sh\nprintf 'action=%s\\n' \"$1\"\n")
 
 	var output bytes.Buffer
-	if err := run(context.Background(), client, "https://example.invalid/install.sh", strings.NewReader(""), &output, &output); err != nil {
+	if err := run(context.Background(), client, "https://example.invalid/install.sh", strings.NewReader(""), &output, &output, "uninstall"); err != nil {
 		t.Fatal(err)
 	}
 	if output.String() != "action=uninstall\n" {
+		t.Fatalf("unexpected script output: %q", output.String())
+	}
+}
+
+func TestRunDownloadsScriptWithoutArgumentForUpdate(t *testing.T) {
+	client := testClient(http.StatusOK, "#!/bin/sh\nprintf 'arguments=%s\\n' \"$#\"\n")
+
+	var output bytes.Buffer
+	if err := run(context.Background(), client, "https://example.invalid/install.sh", strings.NewReader(""), &output, &output); err != nil {
+		t.Fatal(err)
+	}
+	if output.String() != "arguments=0\n" {
 		t.Fatalf("unexpected script output: %q", output.String())
 	}
 }

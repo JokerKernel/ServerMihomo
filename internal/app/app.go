@@ -17,7 +17,10 @@ import (
 
 type appRuntime struct{}
 
-var uninstallSelfFunc = selfmanage.Uninstall
+var (
+	uninstallSelfFunc = selfmanage.Uninstall
+	updateSelfFunc    = selfmanage.Update
+)
 
 func (appRuntime) Terminal() terminal.Terminal {
 	return terminal.Default()
@@ -40,6 +43,9 @@ func Run(ctx context.Context, args []string, registry feature.Registry) error {
 	if handleVersionArg(args) {
 		fmt.Println(version.Info())
 		return nil
+	}
+	if handleSelfUpdateArg(args) {
+		return updateSelfFunc(ctx)
 	}
 	if handleSelfUninstallArg(args) {
 		return uninstallSelfFunc(ctx)
@@ -135,6 +141,19 @@ func handleSelfUninstallArg(args []string) bool {
 
 	switch strings.ToLower(strings.TrimSpace(args[0])) {
 	case "uninstall", "--uninstall":
+		return true
+	default:
+		return false
+	}
+}
+
+func handleSelfUpdateArg(args []string) bool {
+	if len(args) != 1 {
+		return false
+	}
+
+	switch strings.ToLower(strings.TrimSpace(args[0])) {
+	case "update", "--update":
 		return true
 	default:
 		return false

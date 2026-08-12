@@ -45,6 +45,14 @@ sudo sh scripts/install.sh v0.0.7
 sudo mihomo
 ```
 
+以后也可以直接通过管理程序调用安装脚本，检查并更新 ServerMihomo 到最新版本：
+
+```bash
+sudo mihomo update
+```
+
+`--update` 与 `update` 等价。若当前已是最新版本且文件校验通过，安装脚本不会重复安装。
+
 查询最新 Release 时，如果检测到代理环境变量，会先使用当前代理配置访问 GitHub API；代理请求失败或被限流时，脚本会自动绕过代理并尝试直连 API。
 
 默认更新不会把已安装程序自动降级：如果 GitHub `latest` 的语义版本低于本地版本，脚本会保留本地程序并给出警告。只有明确指定旧标签（例如 `sudo sh scripts/install.sh v0.0.1`）时才允许降级。
@@ -191,6 +199,12 @@ sudo ./snailproxy
 
 ```bash
 ./snailproxy --version
+```
+
+调用仓库安装脚本，将 ServerMihomo 管理程序更新到最新版本：
+
+```bash
+sudo mihomo update
 ```
 
 只卸载 ServerMihomo 管理程序本身，并保留 mihomo 内核、systemd 服务、订阅和全部配置：

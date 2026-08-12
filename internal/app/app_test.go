@@ -36,6 +36,36 @@ func TestHandleSelfUninstallArg(t *testing.T) {
 	}
 }
 
+func TestHandleSelfUpdateArg(t *testing.T) {
+	for _, arg := range []string{"update", "--update", " UPDATE "} {
+		if !handleSelfUpdateArg([]string{arg}) {
+			t.Errorf("handleSelfUpdateArg(%q) = false", arg)
+		}
+	}
+	for _, args := range [][]string{nil, {"upgrade"}, {"update", "extra"}} {
+		if handleSelfUpdateArg(args) {
+			t.Errorf("handleSelfUpdateArg(%q) = true", args)
+		}
+	}
+}
+
+func TestRunSelfUpdateDelegatesToRepositoryScript(t *testing.T) {
+	original := updateSelfFunc
+	t.Cleanup(func() { updateSelfFunc = original })
+
+	called := false
+	updateSelfFunc = func(context.Context) error {
+		called = true
+		return nil
+	}
+	if err := Run(context.Background(), []string{"update"}, feature.Registry{}); err != nil {
+		t.Fatalf("Run(update) error = %v", err)
+	}
+	if !called {
+		t.Fatal("repository install script was not delegated to")
+	}
+}
+
 func TestRunSelfUninstallDelegatesToRepositoryScript(t *testing.T) {
 	original := uninstallSelfFunc
 	t.Cleanup(func() { uninstallSelfFunc = original })
