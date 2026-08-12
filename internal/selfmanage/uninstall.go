@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	InstallScriptURL = "https://raw.githubusercontent.com/Snail-one/ServerMihomo/main/scripts/install.sh"
+	InstallScriptURL = "https://raw.githubusercontent.com/JokerKernel/ServerMihomo/main/scripts/install.sh"
 	maxScriptSize    = 1024 * 1024
 )
 

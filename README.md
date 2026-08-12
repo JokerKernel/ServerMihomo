@@ -24,13 +24,13 @@ snailproxy 是一个轻量级命令行安装工具，用于下载最新的 mihom
 安装脚本会自动识别 Linux amd64/arm64，校验 Release 提供的 SHA-256，并将管理程序安装到 `/usr/local/sbin/mihomo`。首次安装和后续更新使用同一条命令：
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Snail-one/ServerMihomo/main/scripts/install.sh | sudo sh
+curl -fsSL https://raw.githubusercontent.com/JokerKernel/ServerMihomo/main/scripts/install.sh | sudo sh
 ```
 
 系统没有 curl 时：
 
 ```bash
-wget -qO- https://raw.githubusercontent.com/Snail-one/ServerMihomo/main/scripts/install.sh | sudo sh
+wget -qO- https://raw.githubusercontent.com/JokerKernel/ServerMihomo/main/scripts/install.sh | sudo sh
 ```
 
 也可以下载脚本后安装指定版本：

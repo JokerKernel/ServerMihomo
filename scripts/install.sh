@@ -2,7 +2,7 @@
 
 set -eu
 
-REPOSITORY="Snail-one/ServerMihomo"
+REPOSITORY="JokerKernel/ServerMihomo"
 INSTALL_DIR="${SERVERMIHOMO_INSTALL_DIR:-/usr/local/sbin}"
 BINARY_NAME="${SERVERMIHOMO_BINARY_NAME:-mihomo}"
 RELEASE="${SERVERMIHOMO_VERSION:-latest}"
