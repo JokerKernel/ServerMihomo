@@ -19,18 +19,30 @@ snailproxy 是一个轻量级命令行安装工具，用于下载最新的 mihom
 
 ---
 
-# 下载最新 Release
+# 一键安装或更新
 
-一键下载当前 Linux 架构对应的最新 `snailproxy`：
+安装脚本会自动识别 Linux amd64/arm64，校验 Release 提供的 SHA-256，并将管理程序安装到 `/usr/local/sbin/mihomo`。首次安装和后续更新使用同一条命令：
 
 ```bash
-arch="$(case "$(uname -m)" in x86_64|amd64) echo amd64 ;; aarch64|arm64) echo arm64 ;; *) echo "不支持的架构: $(uname -m)" >&2; exit 1 ;; esac)" && version="$(curl -fsSLI -o /dev/null -w '%{url_effective}' https://github.com/Snail-one/ServerMihomo/releases/latest | sed 's#.*/##')" && curl -fL "https://github.com/Snail-one/ServerMihomo/releases/download/${version}/snailproxy-linux-${arch}-${version}" -o mihomo && chmod +x mihomo && sudo mv mihomo /usr/local/sbin/mihomo
+curl -fsSL https://raw.githubusercontent.com/Snail-one/ServerMihomo/main/scripts/install.sh | sudo sh
 ```
 
-下载后运行：
+系统没有 curl 时：
 
 ```bash
-sudo ./mihomo
+wget -qO- https://raw.githubusercontent.com/Snail-one/ServerMihomo/main/scripts/install.sh | sudo sh
+```
+
+也可以下载脚本后安装指定版本：
+
+```bash
+sudo sh scripts/install.sh v0.0.7
+```
+
+脚本会同时处理首次安装、版本更新和同版本文件损坏修复。安装完成后运行：
+
+```bash
+sudo mihomo
 ```
 
 ---

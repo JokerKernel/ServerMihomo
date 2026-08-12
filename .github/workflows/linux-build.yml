@@ -87,6 +87,10 @@ jobs:
           path: dist
           merge-multiple: true
 
+      - name: Generate checksums
+        working-directory: dist
+        run: sha256sum snailproxy-linux-* > "checksums_${GITHUB_REF_NAME}.txt"
+
       - name: Publish release assets
         env:
           GH_TOKEN: ${{ github.token }}
