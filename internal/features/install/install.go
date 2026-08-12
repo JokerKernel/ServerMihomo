@@ -28,6 +28,7 @@ var (
 	fetchMihomoAssetsFunc       = fetchMihomoAssets
 	selectAssetFunc             = SelectAsset
 	cleanupTemporaryFilesFunc   = cleanupOnlineInstallTemporaryFiles
+	errReturnToInstallMenu      = errors.New("返回安装与更新菜单")
 )
 
 type missingBundledMihomoPackageError struct {
@@ -74,7 +75,11 @@ func (Feature) Run(ctx context.Context, runtime feature.Runtime) error {
 			return feature.ErrReturn
 		}
 
-		if err := pauseAfterInstallAction(runInstallAction(ctx, runtime, action)); err != nil {
+		actionErr := runInstallAction(ctx, runtime, action)
+		if errors.Is(actionErr, errReturnToInstallMenu) {
+			continue
+		}
+		if err := pauseAfterInstallAction(actionErr); err != nil {
 			return err
 		}
 	}

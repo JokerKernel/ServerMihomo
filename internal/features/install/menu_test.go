@@ -1,9 +1,11 @@
 package install
 
 import (
+	"errors"
 	"strings"
 	"testing"
 
+	"snailproxy/internal/infra/github"
 	"snailproxy/internal/terminal"
 )
 
@@ -30,6 +32,36 @@ func TestSelectMapping(t *testing.T) {
 				t.Fatalf("action = %d, want %d", action, tt.want)
 			}
 		})
+	}
+}
+
+func TestSelectAssetSupportsReturnAliases(t *testing.T) {
+	assets := []github.Asset{{Name: "mihomo-linux-amd64-v1.0.0.gz", Size: 1024}}
+	for _, input := range []string{"0\n", "q\n", "Q\n", "exit\n"} {
+		t.Run(strings.TrimSpace(input), func(t *testing.T) {
+			withInput(t, input)
+
+			_, err := SelectAsset(assets)
+			if !errors.Is(err, errReturnToInstallMenu) {
+				t.Fatalf("SelectAsset() error = %v, want errReturnToInstallMenu", err)
+			}
+		})
+	}
+}
+
+func TestSelectAssetReturnsSelectedAsset(t *testing.T) {
+	assets := []github.Asset{
+		{Name: "first.gz", Size: 1024},
+		{Name: "second.gz", Size: 2048},
+	}
+	withInput(t, "2\n")
+
+	asset, err := SelectAsset(assets)
+	if err != nil {
+		t.Fatalf("SelectAsset() error = %v", err)
+	}
+	if asset.Name != "second.gz" {
+		t.Fatalf("asset.Name = %q, want second.gz", asset.Name)
 	}
 }
 

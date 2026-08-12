@@ -26,7 +26,7 @@ func Select() (Action, error) {
 }
 
 func SelectAsset(assets []github.Asset) (github.Asset, error) {
-	options := make([]terminal.MenuOption[github.Asset], 0, len(assets))
+	options := make([]terminal.MenuOption[github.Asset], 0, len(assets)+1)
 	for i, asset := range assets {
 		options = append(options, terminal.MenuOption[github.Asset]{
 			Number:      i + 1,
@@ -35,7 +35,16 @@ func SelectAsset(assets []github.Asset) (github.Asset, error) {
 			Value:       asset,
 		})
 	}
-	return terminal.Select("安装与更新 › 选择安装包", fmt.Sprintf("[1-%d]", len(assets)), options)
+	options = append(options, terminal.MenuOption[github.Asset]{Number: 0, Label: "返回"})
+
+	asset, err := terminal.Select("安装与更新 › 选择安装包", fmt.Sprintf("[0-%d]", len(assets)), options)
+	if err != nil {
+		return github.Asset{}, err
+	}
+	if asset.Name == "" {
+		return github.Asset{}, errReturnToInstallMenu
+	}
+	return asset, nil
 }
 
 func formatAssetSize(size int64) string {
