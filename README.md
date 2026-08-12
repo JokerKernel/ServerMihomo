@@ -129,7 +129,7 @@ MIHOMO_RELEASE_CHANNEL=alpha
 
 子菜单使用 `ServerMihomo › 功能 › 子功能` 面包屑显示当前位置。输入 `0`、`q`、`Q` 或 `exit` 可以返回或退出；卸载操作会在执行前再次确认。
 
-交互终端默认启用颜色；重定向输出、`TERM=dumb` 或设置 `NO_COLOR` 时自动输出纯文本。也可以通过 `CLICOLOR_FORCE=1` 强制启用颜色。
+主程序和安装脚本在终端中默认启用颜色；重定向输出、`TERM=dumb` 或设置 `NO_COLOR` 时自动输出纯文本。也可以通过 `CLICOLOR_FORCE=1` 强制启用颜色。
 
 安装菜单：
 

@@ -10,16 +10,37 @@ MODE="install"
 TEMP_DIR=""
 STAGED_FILE=""
 
+COLOR_ENABLED=0
+if [ -z "${NO_COLOR+x}" ] && [ "${TERM:-}" != "dumb" ]; then
+	if [ -n "${CLICOLOR_FORCE:-}" ] && [ "${CLICOLOR_FORCE}" != "0" ]; then
+		COLOR_ENABLED=1
+	elif [ -t 1 ]; then
+		COLOR_ENABLED=1
+	fi
+fi
+
+if [ "$COLOR_ENABLED" -eq 1 ]; then
+	COLOR_RESET='\033[0m'
+	COLOR_CYAN='\033[36m'
+	COLOR_YELLOW='\033[33m'
+	COLOR_RED='\033[31m'
+else
+	COLOR_RESET=''
+	COLOR_CYAN=''
+	COLOR_YELLOW=''
+	COLOR_RED=''
+fi
+
 info() {
-	printf '%s\n' "[INFO] $*"
+	printf '%b%s%b %s\n' "$COLOR_CYAN" '[INFO]' "$COLOR_RESET" "$*"
 }
 
 warn() {
-	printf '%s\n' "[WARN] $*"
+	printf '%b%s%b %s\n' "$COLOR_YELLOW" '[WARN]' "$COLOR_RESET" "$*"
 }
 
 fail() {
-	printf '%s\n' "[ERROR] $*" >&2
+	printf '%b%s%b %s\n' "$COLOR_RED" '[ERROR]' "$COLOR_RESET" "$*" >&2
 	exit 1
 }
 
