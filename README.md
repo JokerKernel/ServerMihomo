@@ -45,6 +45,8 @@ sudo sh scripts/install.sh v0.0.7
 sudo mihomo
 ```
 
+查询最新 Release 时，如果检测到代理环境变量，会先使用当前代理配置访问 GitHub API；代理请求失败或被限流时，脚本会自动绕过代理并尝试直连 API。
+
 ---
 
 # 本地安装包（Local Install Bundle）

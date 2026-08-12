@@ -109,9 +109,26 @@ case "$(uname -m)" in
 	*) fail "不支持的处理器架构：$(uname -m)" ;;
 esac
 
+proxy_configured() {
+	[ -n "${HTTPS_PROXY:-}${https_proxy:-}${HTTP_PROXY:-}${http_proxy:-}${ALL_PROXY:-}${all_proxy:-}" ]
+}
+
 if command -v curl >/dev/null 2>&1; then
 	download() {
 		curl --fail --location --silent --show-error --retry 3 --connect-timeout 15 --output "$2" "$1"
+	}
+	download_api() {
+		if ! proxy_configured; then
+			download "$1" "$2"
+			return
+		fi
+		info "正在通过代理访问 GitHub API..."
+		if download "$1" "$2"; then
+			return
+		fi
+		warn "通过代理获取 GitHub API 失败，正在尝试直连..."
+		rm -f "$2"
+		curl --fail --location --silent --show-error --retry 3 --connect-timeout 15 --noproxy '*' --output "$2" "$1"
 	}
 	download_asset() {
 		curl --fail --location --show-error --retry 3 --connect-timeout 15 --progress-bar --output "$2" "$1"
@@ -119,6 +136,19 @@ if command -v curl >/dev/null 2>&1; then
 elif command -v wget >/dev/null 2>&1; then
 	download() {
 		wget --quiet --tries=3 --timeout=15 --output-document="$2" "$1"
+	}
+	download_api() {
+		if ! proxy_configured; then
+			download "$1" "$2"
+			return
+		fi
+		info "正在通过代理访问 GitHub API..."
+		if download "$1" "$2"; then
+			return
+		fi
+		warn "通过代理获取 GitHub API 失败，正在尝试直连..."
+		rm -f "$2"
+		wget --no-proxy --quiet --tries=3 --timeout=15 --output-document="$2" "$1"
 	}
 	download_asset() {
 		wget --tries=3 --timeout=15 --output-document="$2" "$1"
@@ -143,7 +173,7 @@ TEMP_DIR="$(mktemp -d "${TMPDIR:-/tmp}/servermihomo-install.XXXXXX")"
 if [ "$RELEASE" = "latest" ]; then
 	RELEASE_METADATA="${TEMP_DIR}/release.json"
 	info "正在查询最新版本..."
-	download "https://api.github.com/repos/${REPOSITORY}/releases/latest" "$RELEASE_METADATA"
+	download_api "https://api.github.com/repos/${REPOSITORY}/releases/latest" "$RELEASE_METADATA"
 	RELEASE_VERSION="$(sed -n 's/^[[:space:]]*"tag_name":[[:space:]]*"\([^"]*\)".*/\1/p' "$RELEASE_METADATA" | sed -n '1p')"
 	[ -n "$RELEASE_VERSION" ] || fail "无法从 GitHub Release 信息中解析最新版本"
 else
